@@ -32,7 +32,7 @@ public interface ProyectosManager {
      * @param fechaFinal
      * @return 
      */
-    public ProyectosBean getNuevoProyecto(String cliente, String concepto,
+    public ProyectosBean setNuevoProyecto(String cliente, String concepto,
             Integer horasEstimadas, Integer horasFinales, float importe,
             float importeFinal, String fechaEntrega, String fechaFinal);
     
@@ -45,5 +45,6 @@ public interface ProyectosManager {
      */
     public Collection getProyectosFiltrados(String clienteF, Boolean pf, Boolean psf); 
     
+    public void eliminarProyecto(ProyectosBean proyecto);
     
 }

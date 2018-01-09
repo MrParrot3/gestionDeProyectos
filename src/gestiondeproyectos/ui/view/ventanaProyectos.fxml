@@ -257,6 +257,7 @@
         <columns>
           <TableColumn fx:id="tvcolN" prefWidth="37.0" text="Nº" />
           <TableColumn fx:id="tvcolCliente" prefWidth="62.0" text="Cliente " />
+            <TableColumn fx:id="tvcolConcepto" prefWidth="62.0" text="Concepto" />
             <TableColumn fx:id="tvcolServicios" prefWidth="75.0" text="Servicios" />
             <TableColumn fx:id="tvcolHorasEstimadas" prefWidth="129.0" text="Horas estimadas" />
             <TableColumn fx:id="tvcolFechaEntrega" minWidth="0.0" prefWidth="129.0" text="Fecha estimada" />

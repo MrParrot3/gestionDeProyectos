@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -26,6 +27,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Menu;
@@ -52,6 +54,8 @@ public class VentanaProyectosController {
     private ProyectosManager proyectosManager;
     private ClientesManager clientesManager;
     private FacturasManager facturasManager;
+    
+    private ObservableList<ProyectosBean> proyectos;
     
     @FXML
     private Button btnAnadir;
@@ -92,6 +96,8 @@ public class VentanaProyectosController {
     @FXML
     private TableColumn tvcolCliente;
     @FXML
+    private TableColumn tvcolConcepto;
+    @FXML
     private TableColumn tvcolServicios;
     @FXML
     private TableColumn tvcolHorasEstimadas;
@@ -124,7 +130,7 @@ public class VentanaProyectosController {
     }
 
     public void setManager(FacturasManager facturasManager, 
-        ProyectosManager proyectosManager, ClientesManager clientesManager) {
+       ProyectosManager proyectosManager, ClientesManager clientesManager) {
        this.facturasManager =facturasManager;
        this.proyectosManager = proyectosManager;
        this.clientesManager = clientesManager;
@@ -165,6 +171,7 @@ public class VentanaProyectosController {
         logger.info("Al mostrar la ventana.");
         tvcolN.setCellValueFactory(new PropertyValueFactory<>("nProyecto"));
         tvcolCliente.setCellValueFactory(new PropertyValueFactory<>("cliente"));
+        tvcolConcepto.setCellValueFactory(new PropertyValueFactory<>("concepto"));
         tvcolServicios.setCellValueFactory(new PropertyValueFactory<>("servicios"));
         tvcolHorasEstimadas.setCellValueFactory(new PropertyValueFactory<>("horasEstimadas"));
         tvcolFechaEntrega.setCellValueFactory(new PropertyValueFactory<>("fechaEntrega"));
@@ -205,14 +212,7 @@ public class VentanaProyectosController {
             btnEliminar.setDisable(false);
         }
         else{
-            tfCliente.setText("");
-            tfConcepto.setText("");
-            tfHorasEstimadas.setText("");
-            tfHorasfinales.setText("");
-            tfImporte.setText("");
-            tfImporteFinal.setText("");
-            dpFechaEntrega.setValue(null);
-            dpFechaFinal.setValue(null);
+           limpiarCampos();
 
             btnAnadir.setDisable(false);
             btnModificar.setDisable(true);
@@ -233,7 +233,7 @@ public class VentanaProyectosController {
      */
     @FXML
     private void handleButtonAnadir(ActionEvent event) {
-        logger.info("añadiendo");
+        logger.info("Evento del boton añadir en la ventana proyectos");
         btnEliminar.setDisable(true);
         btnModificar.setDisable(true);
         
@@ -272,12 +272,17 @@ public class VentanaProyectosController {
                 Integer.parseInt(tfHorasEstimadas.getText());    
                 Float.parseFloat(tfImporte.getText());    
                 dpFechaEntrega.getValue().format(formatter);
-                ProyectosBean proyecto = proyectosManager.getNuevoProyecto(tfCliente.getText(),
+                
+                ProyectosBean proyecto = proyectosManager.setNuevoProyecto(tfCliente.getText(),
                         tfConcepto.getText(), Integer.parseInt(tfHorasEstimadas.getText()),
                         hf, Float.parseFloat(tfImporte.getText()), imf,
                         dpFechaEntrega.getValue().format(formatter), ff);
                 
+                proyectos = FXCollections.observableArrayList(proyectosManager.getAllProyectos());
+                tvProyectos.setItems(proyectos);
                 tvProyectos.refresh();
+                limpiarCampos(); 
+               
                 
                 
             }catch(Exception e){
@@ -288,14 +293,7 @@ public class VentanaProyectosController {
             tvProyectos.refresh();
             logger.info("Actualizar");
             
-            tfCliente.setText("");
-            tfConcepto.setText("");
-            tfHorasEstimadas.setText("");
-            tfHorasfinales.setText("");
-            tfImporte.setText("");
-            tfImporteFinal.setText("");
-            dpFechaEntrega.setValue(null);
-            dpFechaFinal.setValue(null);
+            limpiarCampos();
             
             btnAnadir.setDisable(false);
             btnModificar.setDisable(true);
@@ -313,33 +311,34 @@ public class VentanaProyectosController {
      */
     @FXML
     private void handleButtonEliminar(ActionEvent event) {
-        logger.info("Eliminando");
-        if(this.tfCliente.getText().trim().equals("") || this.tfConcepto.getText().trim().equals("")
-            || this.tfHorasEstimadas.getText().trim().equals("") || 
-            this.tfImporte.getText().trim().equals("") || this.dpFechaEntrega.getValue().equals("")){
-            
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Contenido de los campos Cliente, Concepto, Horas estimadas, Importe o Fecha de Entrega estan vacios");         //decir campos
-            alert.showAndWait();
+        logger.info("Evento del boton eliminar en la ventana proyectos");
+        Optional<ButtonType> result;
+         Alert alert;
+        alert = new Alert(Alert.AlertType.CONFIRMATION, "No podrás recuperar la información. ¿Estas seguro?");
+        alert.setTitle("¡OJO!");
+        alert.setHeaderText("Presta mucha atención!");
+        result = alert.showAndWait();
+        if (result.get() == ButtonType.OK){
+            if(this.tfCliente.getText().trim().equals("") || this.tfConcepto.getText().trim().equals("")
+                || this.tfHorasEstimadas.getText().trim().equals("") || 
+                this.tfImporte.getText().trim().equals("") || this.dpFechaEntrega.getValue().equals("")){
+
+                alert = new Alert(Alert.AlertType.ERROR, "Contenido de los campos Cliente, Concepto, Horas estimadas, Importe o Fecha de Entrega estan vacios");         //decir campos
+                alert.showAndWait();
+            }
+            else{
+                proyectosManager.eliminarProyecto(tvProyectos.getSelectionModel().getSelectedItem());
+                proyectos = FXCollections.observableArrayList(proyectosManager.getAllProyectos());
+                tvProyectos.setItems(proyectos);
+                tvProyectos.refresh();
+
+                limpiarCampos();      
+
+                btnAnadir.setDisable(false);
+                btnModificar.setDisable(true);
+                btnEliminar.setDisable(true);
+            }
         }
-        else{
-            ProyectosBean selecProyectos=tvProyectos.getSelectionModel().getSelectedItem();
-            tvProyectos.getItems().remove(selecProyectos);
-            tvProyectos.refresh();
-            
-            tfCliente.setText("");
-            tfConcepto.setText("");
-            tfHorasEstimadas.setText("");
-            tfHorasfinales.setText("");
-            tfImporte.setText("");
-            tfImporteFinal.setText("");
-            dpFechaEntrega.setValue(null);
-            dpFechaFinal.setValue(null);
-            
-            btnAnadir.setDisable(true);
-            btnModificar.setDisable(false);
-            btnEliminar.setDisable(false);
-        }
-        
     }
     
     /**
@@ -350,7 +349,7 @@ public class VentanaProyectosController {
      */
     @FXML
     private void handleButtonModificar(ActionEvent event) {
-        logger.info("MOdificando");
+        logger.info("Evento del boton modificar en la ventana proyectos");
         if(this.tfCliente.getText().trim().equals("") || this.tfConcepto.getText().trim().equals("")
             || this.tfHorasEstimadas.getText().trim().equals("") || 
             this.tfImporte.getText().trim().equals("") || this.dpFechaEntrega.getValue().equals("")){
@@ -398,15 +397,7 @@ public class VentanaProyectosController {
                 alert.showAndWait();//alert correcto   
             }
             tvProyectos.refresh();
-
-            tfCliente.setText("");
-            tfConcepto.setText("");
-            tfHorasEstimadas.setText("");
-            tfHorasfinales.setText("");
-            tfImporte.setText("");
-            tfImporteFinal.setText("");
-            dpFechaEntrega.setValue(null);
-            dpFechaFinal.setValue(null);
+            limpiarCampos();
 
             btnAnadir.setDisable(true);    
             btnModificar.setDisable(false);
@@ -421,7 +412,7 @@ public class VentanaProyectosController {
      */
     @FXML
     private void handleButtonBuscar(ActionEvent event) {
-        logger.info("Buscando");
+        logger.info("Evento del boton buscar en la ventana proyectos");
         boolean pf=false, psf=false;
         if(cbProyectosFinal.isSelected()){
             pf=true;
@@ -430,10 +421,10 @@ public class VentanaProyectosController {
         if(cbProyectosSinFinal.isSelected()){
             psf=true;
         }
-       
-         ObservableList<ProyectosBean> proyectos =  FXCollections.observableArrayList(proyectosManager.getProyectosFiltrados(tfCifCliente.getText(), pf, psf));
-         tvProyectos.setItems(proyectos);
-         tvProyectos.refresh();
+        
+        proyectos =  FXCollections.observableArrayList(proyectosManager.getProyectosFiltrados(tfCifCliente.getText(), pf, psf));
+        tvProyectos.setItems(proyectos);
+        tvProyectos.refresh();
     }
     
     /**
@@ -442,6 +433,7 @@ public class VentanaProyectosController {
      */
     @FXML
     private void handleButtonSalir(ActionEvent event) {
+        logger.info("Evento del boton salir en la ventana proyectos");
         Platform.exit();
     }
     
@@ -451,9 +443,9 @@ public class VentanaProyectosController {
      */
         @FXML
     public void handleMenuClientes (Event e){
-        logger.info("En el evento del menu clientes");
-          FXMLLoader loader=new FXMLLoader(getClass().getResource("/gestiondeproyectos/ui/view/ventanaClientes.fxml"));
-            Parent root;
+        logger.info("Evento del boton menu clientes en la ventana proyectos");
+        FXMLLoader loader=new FXMLLoader(getClass().getResource("/gestiondeproyectos/ui/view/ventanaClientes.fxml"));
+        Parent root;
         try {
             root = (Parent) loader.load();
             VentanaClientesController controlador = loader.getController();
@@ -473,8 +465,9 @@ public class VentanaProyectosController {
      */
     @FXML
     private void handleMenuFacturas(Event e){
-         FXMLLoader loader=new FXMLLoader(getClass().getResource("/gestiondeproyectos/ui/view/ventanaFacturas.fxml"));
-            Parent root;
+        logger.info("Evento del boton menu facturas en la ventana proyectos");
+        FXMLLoader loader=new FXMLLoader(getClass().getResource("/gestiondeproyectos/ui/view/ventanaFacturas.fxml"));
+        Parent root;
         try {
             root = (Parent) loader.load();
             VentanaFacturasController controlador = loader.getController();
@@ -493,10 +486,10 @@ public class VentanaProyectosController {
      */
     @FXML
     private void handleMenuServicios(Event e){
-         logger.info("En el evento del menu servicios");
+        logger.info("Evento del boton menu servicios en la ventana proyectos");
 
-          FXMLLoader loader=new FXMLLoader(getClass().getResource("/gestiondeproyectos/ui/view/ventanaServiciosObras.fxml"));
-            Parent root;
+        FXMLLoader loader=new FXMLLoader(getClass().getResource("/gestiondeproyectos/ui/view/ventanaServiciosObras.fxml"));
+        Parent root;
         try {
             root = (Parent) loader.load();
             VentanaServiciosController controlador = loader.getController();
@@ -509,6 +502,17 @@ public class VentanaProyectosController {
         } catch (IOException ex) {
             Logger.getLogger(VentanaClientesController.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public void limpiarCampos(){
+        tfCliente.setText("");
+        tfConcepto.setText("");
+        tfHorasEstimadas.setText("");
+        tfHorasfinales.setText("");
+        tfImporte.setText("");
+        tfImporteFinal.setText("");
+        dpFechaEntrega.setValue(null);
+        dpFechaFinal.setValue(null);
     }
             
 }

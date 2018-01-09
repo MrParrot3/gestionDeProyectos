@@ -97,7 +97,7 @@ public class ProyectosManagerTestDataGenerator implements ProyectosManager {
      * @param fechaFinal
      * @return 
      */
-    public ProyectosBean getNuevoProyecto(String cliente, String concepto,
+    public ProyectosBean setNuevoProyecto(String cliente, String concepto,
             Integer horasEstimadas, Integer horasFinales, float importe,
             float importeFinal, String fechaEntrega, String fechaFinal){
             
@@ -126,13 +126,16 @@ public class ProyectosManagerTestDataGenerator implements ProyectosManager {
         else{
             proyectosFiltro=proyectos.stream().filter(p->p.getCliente().contains(clienteF)).collect(Collectors.toList());
         }
-        if(pf){
+        if(pf && psf){
+            proyectosFiltro=proyectos.stream().collect(Collectors.toList());
+        }
+        else if(pf){
            proyectosFiltro = proyectos.stream().filter(p->p.getHorasFinales()!=0)
                                                .filter(p->p.getImporteFinal()!=0)
                                                .filter(p->!p.getFechaFinal().equals(""))
                                                .collect(Collectors.toList());
         }
-        if(psf){
+        else if(psf){
             proyectosFiltro = proyectos.stream().filter(p->p.getHorasFinales()==0 || p.getImporteFinal()==0 || p.getFechaFinal().equals("")).collect(Collectors.toList());
             /*
             proyectosFiltro = proyectos.stream().filter(p->p.getHorasFinales()==0)
@@ -145,6 +148,12 @@ public class ProyectosManagerTestDataGenerator implements ProyectosManager {
         
         return proyectosFiltro;
     }
+
+    @Override
+    public void eliminarProyecto(ProyectosBean proyecto) {
+        proyectos.remove(proyecto);
+    }
+    
     
     
     

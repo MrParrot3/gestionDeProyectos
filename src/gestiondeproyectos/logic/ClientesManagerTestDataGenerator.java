@@ -41,7 +41,6 @@ public class ClientesManagerTestDataGenerator implements ClientesManager{
      */
     @Override
     public Collection getAllClientes() {
-  
        return clientes;
     }
     
